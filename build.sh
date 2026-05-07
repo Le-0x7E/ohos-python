@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-WORKDIR=$(pwd)
+WORKDIR="/data"
 
 # 如果存在旧的目录和文件，就清理掉
 # 仅清理工作目录，不清理系统目录，因为默认用户每次使用新的容器进行构建（仓库中的构建指南是这么指导的）
@@ -12,7 +12,7 @@ rm -rf *.tar.gz \
     python-3.12.13-ohos-arm64
 
 # 下载一些命令行工具，并将它们软链接到 bin 目录中
-cd /opt
+cd /data
 echo "coreutils 9.10
 busybox 1.37.0
 grep 3.12
@@ -60,7 +60,7 @@ llvm-strip"
 for executable in $essential_tools; do
     cat <<EOF > /bin/$executable
 #!/bin/sh
-exec /opt/ohos-sdk/ohos/native/llvm/bin/$executable "\$@"
+exec /data/ohos-sdk/ohos/native/llvm/bin/$executable "\$@"
 EOF
     chmod 0755 /bin/$executable
 done
@@ -84,21 +84,21 @@ ln -s llvm-size size
 ln -s llvm-strip strip
 
 export CFLAGS="-fPIC"
-export CPPFLAGS="-I/opt/deps/include"
-export LDFLAGS="-L/opt/deps/lib"
-export LD_LIBRARY_PATH="/opt/deps/lib"
+export CPPFLAGS="-I/data/deps/include"
+export LDFLAGS="-L/data/deps/lib"
+export LD_LIBRARY_PATH="/data/deps/lib"
 
 mkdir $WORKDIR/deps
 cd $WORKDIR/deps
 
 # 编译 openssl
-curl -fLO https://github.com/openssl/openssl/releases/download/openssl-3.6.1/openssl-3.6.1.tar.gz
-tar -zxf openssl-3.6.1.tar.gz
-cd openssl-3.6.1
+curl -fLO https://github.com/openssl/openssl/releases/download/openssl-3.5.6/openssl-3.5.6.tar.gz
+tar -zxf openssl-3.5.6.tar.gz
+cd openssl-3.5.6
 # 修改证书目录和聚合文件路径，让它能在 OpenHarmony 平台上正确地找到证书
 sed -i 's|OPENSSLDIR "/certs"|"/etc/ssl/certs"|' include/internal/common.h
 sed -i 's|OPENSSLDIR "/cert.pem"|"/etc/ssl/certs/cacert.pem"|' include/internal/common.h
-./Configure --prefix=/opt/deps --openssldir=/etc/ssl no-legacy no-module no-engine linux-aarch64
+./Configure --prefix=/data/deps --openssldir=/etc/ssl no-legacy no-module no-engine linux-aarch64
 make -j$(nproc)
 make install_dev
 cd ..
@@ -107,7 +107,7 @@ cd ..
 curl -fLO https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
 tar -zxf zlib-1.3.1.tar.gz
 cd zlib-1.3.1
-./configure --prefix=/opt/deps
+./configure --prefix=/data/deps
 make -j$(nproc)
 make install
 cd ..
@@ -116,16 +116,16 @@ cd ..
 curl -fLO https://ftp.gnu.org/gnu/gettext/gettext-1.0.tar.gz
 tar -zxf gettext-1.0.tar.gz
 cd gettext-1.0
-./configure --prefix=/opt/deps
+./configure --prefix=/data/deps
 make -j$(nproc)
 make install
 cd ..
 
 # 编 libffi
-curl -fLO https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz
-tar -zxf libffi-3.5.2.tar.gz
-cd libffi-3.5.2
-./configure --prefix=/opt/deps
+curl -fLO https://github.com/libffi/libffi/releases/download/v3.4.8/libffi-3.4.8.tar.gz
+tar -zxf libffi-3.4.8.tar.gz
+cd libffi-3.4.8
+./configure --prefix=/data/deps
 make -j$(nproc)
 make install
 cd ..
@@ -135,7 +135,7 @@ curl -fLO https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.41/util-
 tar -zxf util-linux-2.41.3.tar.gz
 cd util-linux-2.41.3
 ./configure \
-    --prefix=/opt/deps \
+    --prefix=/data/deps \
     --disable-all-programs \
     --enable-libuuid \
     --disable-gtk-doc \
@@ -148,7 +148,7 @@ cd ..
 curl -fLO https://github.com/tukaani-project/xz/releases/download/v5.8.1/xz-5.8.1.tar.gz
 tar -zxf xz-5.8.1.tar.gz
 cd xz-5.8.1
-./configure --prefix=/opt/deps
+./configure --prefix=/data/deps
 make -j$(nproc)
 make install
 cd ..
@@ -158,10 +158,10 @@ curl -fLO https://mirrors.kernel.org/sourceware/bzip2/bzip2-1.0.8.tar.gz
 tar -zxf bzip2-1.0.8.tar.gz
 cd bzip2-1.0.8
 make -f Makefile-libbz2_so
-cp libbz2.so.1.0.8 /opt/deps/lib
-cp bzlib.h /opt/deps/include
+cp libbz2.so.1.0.8 /data/deps/lib
+cp bzlib.h /data/deps/include
 cd ..
-cd /opt/deps/lib
+cd /data/deps/lib
 ln -s libbz2.so.1.0.8 libbz2.so.1.0
 ln -s libbz2.so.1.0.8 libbz2.so.1
 ln -s libbz2.so.1.0.8 libbz2.so
@@ -174,7 +174,7 @@ cd zstd-1.5.7
 sed -i 's@!defined(__ANDROID__)@!defined(__ANDROID__) \&\& !defined(__OHOS__)@g' lib/common/zstd_deps.h
 sed -i 's@!defined(__ANDROID__)@!defined(__ANDROID__) \&\& !defined(__OHOS__)@g' lib/dictBuilder/cover.c
 make -j$(nproc)
-make install PREFIX=/opt/deps
+make install PREFIX=/data/deps
 cd ..
 
 # 编译 ncurses
@@ -182,22 +182,22 @@ curl -fLO https://ftp.gnu.org/gnu/ncurses/ncurses-6.5.tar.gz
 tar -zxf ncurses-6.5.tar.gz
 cd ncurses-6.5
 ./configure \
-    --prefix=/opt/deps \
+    --prefix=/data/deps \
     --enable-termcap \
     --enable-widec \
     --with-shared \
-    --with-terminfo-dirs=/opt/python-3.12.13-ohos-arm64/share/terminfo:/data/python-3.12.13-ohos-arm64/share/terminfo \
+    --with-terminfo-dirs=/data/python-3.12.13-ohos-arm64/share/terminfo:/opt/python-3.12.13-ohos-arm64/share/terminfo \
     --with-fallbacks=xterm,xterm-256color,xterm-color,screen,screen-256color,tmux,tmux-256color,linux,vt100,vt102,ansi
 make -j$(nproc)
 make install
-cp /opt/deps/include/ncursesw/*.h /opt/deps/include
+cp /data/deps/include/ncursesw/*.h /data/deps/include
 cd ..
 
 # 编译 readline
 curl -fLO https://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz
 tar -zxf readline-8.3.tar.gz
 cd readline-8.3
-./configure --prefix=/opt/deps --with-curses
+./configure --prefix=/data/deps --with-curses
 make -j$(nproc) SHLIB_LIBS="-lncursesw"
 make install
 cd ..
@@ -207,24 +207,24 @@ curl -fLO https://ftp.gnu.org/gnu/gdbm/gdbm-1.26.tar.gz
 tar -zxf gdbm-1.26.tar.gz
 cd gdbm-1.26
 ./configure \
-    --prefix=/opt/deps \
+    --prefix=/data/deps \
     --enable-libgdbm-compat \
     --without-readline
 make -j$(nproc)
 make install
 cd ..
-cd /opt/deps/include
+cd /data/deps/include
 ln -s ndbm.h gdbm-ndbm.h
 cd - >/dev/null
 
-# # 编译 sqlite
-# curl -fLO https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
-# tar -zxf sqlite-autoconf-3510200.tar.gz
-# cd sqlite-autoconf-3510200
-# ./configure --prefix=/opt/deps --disable-readline
-# make -j$(nproc)
-# make install
-# cd ..
+# 编译 sqlite
+curl -fLO https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
+tar -zxf sqlite-autoconf-3510200.tar.gz
+cd sqlite-autoconf-3510200
+./configure --prefix=/data/deps --disable-readline
+make -j$(nproc)
+make install
+cd ..
 
 cd $WORKDIR
 
@@ -241,47 +241,47 @@ echo "PLATFORM_TRIPLET=aarch64-linux-musl" > Misc/platform_triplet.c
 ./configure \
     --build=aarch64-linux-musl \
     --host=aarch64-linux-musl \
-    --prefix=/opt/python-3.12.13-ohos-arm64 \
-    --with-openssl=/opt/deps \
+    --prefix=/data/python-3.12.13-ohos-arm64 \
+    --with-openssl=/data/deps \
     --disable-ipv6 \
     --with-readline=readline \
     --with-dbmliborder=gdbm \
-    LDFLAGS="-L/opt/deps/lib -Wl,-rpath,'\$\$ORIGIN/../lib' -Wl,-rpath,'\$\$ORIGIN/../../../lib'"
+    LDFLAGS="-L/data/deps/lib -Wl,-rpath,'\$\$ORIGIN/../lib' -Wl,-rpath,'\$\$ORIGIN/../../../lib'"
 # 强制禁用那些既用不上、又影响编译的特性
 sed -i '/HAVE_LINUX_NETFILTER_IPV4_H/d' pyconfig.h
 sed -i '/HAVE_LINUX_CAN/d' pyconfig.h
 make -j$(nproc)
 make install
-cp /opt/deps/lib/*so* /opt/python-3.12.13-ohos-arm64/lib
+cp /data/deps/lib/*so* /data/python-3.12.13-ohos-arm64/lib
 cd ..
 
 # 对这几个脚本做一点小改造，让它们能够做到 “portable”，在任意安装路径下都能正常使用。
-cd /opt/python-3.12.13-ohos-arm64/bin
+cd /data/python-3.12.13-ohos-arm64/bin
 printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")"/python3.12 -m pip "$@"\n' > pip3
 printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")"/python3.12 -m pip "$@"\n' > pip3.12
 printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")"/python3.12 -m pydoc "$@"\n' > pydoc3.12
 cd - >/dev/null
 
 # 这个 python 不支持图形界面，idle 无法正常使用，直接删掉 idle 命令
-rm /opt/python-3.12.13-ohos-arm64/bin/idle*
+rm /data/python-3.12.13-ohos-arm64/bin/idle*
 
 # 将 terminfo 数据库携带到制品中
-cp -r /opt/deps/share/terminfo /opt/python-3.12.13-ohos-arm64/share/
+cp -r /data/deps/share/terminfo /data/python-3.12.13-ohos-arm64/share/
 
 # 进行代码签名
-cd /opt/python-3.12.13-ohos-arm64
+cd /data/python-3.12.13-ohos-arm64
 find . -type f \( -perm -0111 -o -name "*.so*" \) | while read FILE; do
     if file -b "$FILE" | grep -iqE "elf|sharedlib|ELF|shared object"; then
         echo "Signing binary file $FILE"
         ORIG_PERM=$(stat -c %a "$FILE")
-        /opt/ohos-sdk/ohos/toolchains/lib/binary-sign-tool sign -inFile "$FILE" -outFile "$FILE" -selfSign 1
+        /data/ohos-sdk/ohos/toolchains/lib/binary-sign-tool sign -inFile "$FILE" -outFile "$FILE" -selfSign 1
         chmod "$ORIG_PERM" "$FILE"
     fi
 done
 cd $WORKDIR
 
 # 履行开源义务，把使用的开源软件的 license 全部聚合起来放到制品中
-cat <<EOF > /opt/python-3.12.13-ohos-arm64/licenses.txt
+cat <<EOF > /data/python-3.12.13-ohos-arm64/licenses.txt
 This document describes the licenses of all software distributed with the
 bundled application.
 ==========================================================================
@@ -360,7 +360,7 @@ $(sed -n '1,10p' deps/sqlite-autoconf-3510200/sqlite3.h)
 EOF
 
 # 打包最终产物
-cp -r /opt/python-3.12.13-ohos-arm64 ./
+cp -r /data/python-3.12.13-ohos-arm64 ./
 tar -zcf python-3.12.13-ohos-arm64.tar.gz python-3.12.13-ohos-arm64
 
 # 这一步是针对手动构建场景做优化。
