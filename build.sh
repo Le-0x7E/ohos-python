@@ -276,7 +276,7 @@ find . -type f \( -perm -0111 -o -name "*.so*" \) | while read FILE; do
     if file -b "$FILE" | grep -iqE "elf|sharedlib|ELF|shared object"; then
         echo "Signing binary file $FILE"
         ORIG_PERM=$(stat -c %a "$FILE")
-        /data/ohos-sdk/ohos/toolchains/lib/binary-sign-tool sign -inFile "$FILE" -outFile "$FILE" -selfSign 1
+        /opt/ohos-sdk/ohos/toolchains/lib/binary-sign-tool sign -inFile "$FILE" -outFile "$FILE" -selfSign 1
         chmod "$ORIG_PERM" "$FILE"
     fi
 done
