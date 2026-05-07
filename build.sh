@@ -217,14 +217,14 @@ cd /opt/deps/include
 ln -s ndbm.h gdbm-ndbm.h
 cd - >/dev/null
 
-# 编译 sqlite
-curl -fLO https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
-tar -zxf sqlite-autoconf-3510200.tar.gz
-cd sqlite-autoconf-3510200
-./configure --prefix=/opt/deps --disable-readline
-make -j$(nproc)
-make install
-cd ..
+# # 编译 sqlite
+# curl -fLO https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
+# tar -zxf sqlite-autoconf-3510200.tar.gz
+# cd sqlite-autoconf-3510200
+# ./configure --prefix=/opt/deps --disable-readline
+# make -j$(nproc)
+# make install
+# cd ..
 
 cd $WORKDIR
 
