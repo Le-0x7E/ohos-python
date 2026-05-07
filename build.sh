@@ -362,7 +362,7 @@ $(sed -n '1,10p' deps/sqlite-autoconf-3510200/sqlite3.h)
 EOF
 
 # 打包最终产物
-cp -r /data/python-3.12.13-ohos-arm64 ./
+# cp -r /data/python-3.12.13-ohos-arm64 ./
 tar -zcf python-3.12.13-ohos-arm64.tar.gz python-3.12.13-ohos-arm64
 
 # 这一步是针对手动构建场景做优化。
