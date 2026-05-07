@@ -3,7 +3,7 @@ set -e
 
 WORKDIR="/data"
 
-mkdir $WORKDIR
+mkdir /data
 
 # 如果存在旧的目录和文件，就清理掉
 # 仅清理工作目录，不清理系统目录，因为默认用户每次使用新的容器进行构建（仓库中的构建指南是这么指导的）
@@ -14,7 +14,7 @@ rm -rf *.tar.gz \
     python-3.12.13-ohos-arm64
 
 # 下载一些命令行工具，并将它们软链接到 bin 目录中
-cd /data
+cd /opt
 echo "coreutils 9.10
 busybox 1.37.0
 grep 3.12
@@ -62,7 +62,7 @@ llvm-strip"
 for executable in $essential_tools; do
     cat <<EOF > /bin/$executable
 #!/bin/sh
-exec /data/ohos-sdk/ohos/native/llvm/bin/$executable "\$@"
+exec /opt/ohos-sdk/ohos/native/llvm/bin/$executable "\$@"
 EOF
     chmod 0755 /bin/$executable
 done
